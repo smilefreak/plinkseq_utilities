@@ -8,20 +8,23 @@ class Phenotype:
         https://atgu.mgh.harvard.edu/plinkseq/input.shtml
     """
     def __init__(self, name, description,type,missing):
-        self.name = name
-        self.type = type
-        self.description = description
-        self.missing = missing
-        self.ids = {}
+        self._name = name
+        self._type = type
+        self._description = description
+        self._missing = missing
+        self._ids = {}
 
     def add_data(self,sample,value):
-        self.ids[sample] = value
+        self._ids[sample] = value
 
+    def get_id(self,sample)
+        return(self._ids[sample])
+    
     def get_header(self)
         s = "##"
-        s += name + ","
-        s += missing +","
-        s += "\"" + description +"\""
+        s += self._name + ","
+        s += self._missing +","
+        s += "\"" + self._description +"\"" + "\n"
         return(s)
 
     
