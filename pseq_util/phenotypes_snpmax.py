@@ -13,6 +13,7 @@
 
 from phenotype import Phenotype
 import argparse
+import tempfile
 
 sample_list_pheno={}
 
@@ -34,7 +35,7 @@ def is_int(s):
         return False
 
 def parse_phenotypes(input_phenotypes, output_phenotypes, missing, delim):
-    if (missing == ' '):
+    if (missing == ' ' or missing == ''):
         # set to something sensible
         missing = '.'
     with open(input_phenotypes) as input_phenotypes_f:
@@ -46,10 +47,11 @@ def parse_phenotypes(input_phenotypes, output_phenotypes, missing, delim):
                     phenotypes = [[] for i in header_list] 
                 else:
                     for i, pheno in enumerate(line.split(delim)):
-                        pheno = pheno.replace('\n','')
-                        if (pheno == ' '): 
+                        pheno = pheno.replace('\n','').replace('"','').replace(' ','')
+                        if (pheno == ' ' or pheno == ''): 
                             pheno = missing 
                         phenotypes[i].append(pheno)
+
             samples = phenotypes[0]
             header_pheno = header_list[1:]
             phenotypes = phenotypes[1:]
@@ -70,9 +72,20 @@ def parse_phenotypes(input_phenotypes, output_phenotypes, missing, delim):
             for samp in samples:
                 out.write(samp + delim +  delim.join([p.get_data(samp) for p in phenotype_obj]) + '\n')
 
-
-def subset_file(samples):
-    raise NotImplementedError()
+def subset_file(samples, input_p):
+    t_file = tempfile.NamedTemporaryFile(delete=False) 
+    with open(samples) as s:
+        samples = [x.strip() for x in s]
+    with open(input_p) as f:
+        for i, line in enumerate(f):
+            if i == 0:
+                t_file.write(line)
+            else:
+                sample_id = line.split()[0]
+                if sample_id in samples:
+                    t_file.write(line)
+    t_file.close()
+    return(t_file.name)
 
 def sniff_datatype(data_column, missing):
     nofails = "Integer"
@@ -96,15 +109,17 @@ def main():
     parser.add_argument('-d','--delimiter',dest='delimiter',default='\t')
     parser.add_argument('-m','--missing',dest='missing',default ="")
     args = parser.parse_args()
-    assert args.input_phenotypes is None, \
+    assert args.input_phenotypes is not None, \
             "-i or --input_phenotypes argument required"
-    assert args.output_phenotypes is None, \
+    assert args.output_phenotypes is not None, \
             "-o or --output_phenotypes argument required"
     delim = args.delimiter
     missing = args.missing
     if(args.samples is not None):
-        args.input_phenotypes = subset_file(args.samples)
-    parse_phenotypes(args.input_phenotypes, args.output_phenotypes, args.delimiter, args.missing)        
+        args.input_phenotypes = subset_file(args.samples, args.input_phenotypes)
+        parse_phenotypes(args.input_phenotypes, args.output_phenotypes, missing, delim)     
+    #if(args.samples is not None):
+    #    os.remove(args.input_phenotypes)
 
 
 if __name__=="__main__":
