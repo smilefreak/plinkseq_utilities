@@ -1,4 +1,9 @@
 plinkseq_utilities
 ==================
 
-plink_utils
+Misc utilities for working with sequencing data and plink/seq
+
+#Installation
+
+  python setup.py install --user
+  
